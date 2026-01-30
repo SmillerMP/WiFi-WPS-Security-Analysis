@@ -29,8 +29,10 @@ BLUE=(0,120,255)
 YELLOW=(240,200,0)
 ORANGE=(255,140,0)
 
+http_server_proc = None
+
 def cleanup_and_exit(signum=None, frame=None):
-    global running
+    global running, http_server_proc
     running = False
     try:
         screen.fill(BLACK)
@@ -42,6 +44,7 @@ def cleanup_and_exit(signum=None, frame=None):
     except:
         pass
     os.system("stty sane")
+    stop_http_server()
     sys.exit(0)
 
 signal.signal(signal.SIGINT, cleanup_and_exit)
@@ -123,9 +126,58 @@ def get_mode():
     except: pass
     return "unknown"
 
+def start_http_server():
+    """Inicia el servidor HTTP si hay IP válida"""
+    global http_server_proc
+    ip = get_ip()
+    if ip != "no ip":
+        # Matar cualquier instancia previa
+        stop_http_server()
+        
+        # Directorio donde se montará el servidor HTTP
+        server_dir = "/home/samuel/Test"
+        
+        try:
+            # Iniciar servidor HTTP en el directorio especificado
+            http_server_proc = subprocess.Popen(
+                [sys.executable, "-m", "http.server", "8000"],
+                cwd=server_dir,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
+            return True
+        except Exception as e:
+            print(f"Error starting HTTP server: {e}")
+            return False
+    return False
+
+def stop_http_server():
+    """Detiene el servidor HTTP"""
+    global http_server_proc
+    
+    # Matar por proceso guardado
+    if http_server_proc:
+        try:
+            http_server_proc.terminate()
+            http_server_proc.wait(timeout=2)
+        except:
+            try:
+                http_server_proc.kill()
+            except:
+                pass
+        http_server_proc = None
+    
+    # Matar por nombre (por si acaso)
+    subprocess.run("pkill -f 'python.*http.server'", shell=True,
+                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
 # ==== ACTIONS ====
 
 def start_monitor():
+    # Detener http.server al iniciar monitor
+    stop_http_server()
+    
     iface=detect_iface()
     if not iface: return False
 
@@ -160,6 +212,11 @@ def reset_iface():
     ok &= run(f"sudo iw dev {iface} set type managed")
     ok &= run(f"sudo ip link set {iface} up")
     ok &= run("sudo systemctl restart NetworkManager")
+    
+    time.sleep(3)
+    # Iniciar http.server después del reset
+    start_http_server()
+    
     return ok
 
 def async_job(fn,msg_ok,msg_err):
@@ -206,6 +263,10 @@ def read_touch():
                 dimmed=False
 
 threading.Thread(target=read_touch,daemon=True).start()
+
+# ==== INICIO: Comprobar IP e iniciar servidor HTTP ====
+time.sleep(1)  # Esperar un segundo para asegurar que la red esté lista
+start_http_server()
 
 last=False
 show_click=0
