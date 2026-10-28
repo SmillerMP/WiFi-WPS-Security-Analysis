@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: wardriving_postgres
+    environment:
+      POSTGRES_DB: wardriving
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./DB/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - wardriving-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: wardriving_grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+
+      # Acceso anónimo
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+
+      GF_USERS_HOME_PAGE: /d/adwktd6/metricas
+
+
+
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./Grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ./Grafana/dashboard.yaml:/etc/grafana/provisioning/dashboards/dashboard.yaml:ro
+      - ./Grafana:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - postgres
+    networks:
+      - wardriving-net
+
+volumes:
+  postgres_data:
+  grafana_data:
+
+networks:
+  wardriving-net:
+    

@@ -1,0 +1,1414 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "adwktd6",
+    "namespace": "default",
+    "uid": "10c55d6a-eb8e-4dff-a3c8-25ce86c09f85",
+    "resourceVersion": "1783037099613985",
+    "generation": 2,
+    "creationTimestamp": "2026-07-03T00:03:39Z",
+    "labels": {
+      "grafana.app/deprecatedInternalID": "1177785641758720"
+    },
+    "annotations": {
+      "grafana.app/createdBy": "access-policy:service",
+      "grafana.app/folder": "",
+      "grafana.app/managedBy": "classic-file-provisioning",
+      "grafana.app/managerAllowsEdits": "true",
+      "grafana.app/managerId": "wardriving",
+      "grafana.app/saved-from-ui": "Grafana v13.0.1+security-01 (9bbe672d)",
+      "grafana.app/sourceChecksum": "5862a8bf5a5f2e6279e9a44e8d0c9f22",
+      "grafana.app/sourcePath": "/var/lib/grafana/dashboards/dashboard.json",
+      "grafana.app/sourceTimestamp": "1783036040000",
+      "grafana.app/updatedBy": "user:cfqxy6hjoa5tsa",
+      "grafana.app/updatedTimestamp": "2026-07-03T00:04:59Z"
+    }
+  },
+  "spec": {
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "query": {
+            "kind": "DataQuery",
+            "group": "grafana",
+            "version": "v0",
+            "datasource": {
+              "name": "-- Grafana --"
+            },
+            "spec": {}
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "builtIn": true
+        }
+      }
+    ],
+    "cursorSync": "Off",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "Distribución geográfica según estado WPS",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${postgres_wardriving}"
+                      },
+                      "spec": {
+                        "dataset": "wardriving",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n    latitude,\n    longitude,\n    bssid,\n    manufacturer,\n    signal_dbm,\n    wps_state,\n    encryption_type\nFROM (\n    SELECT\n        lat AS latitude,\n        lon AS longitude,\n        bssid,\n\n        CASE\n            WHEN manufacturer IS NULL THEN 'Desconocido'\n            WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n            WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n            ELSE TRIM(manufacturer)\n        END AS manufacturer,\n\n        signal_dbm,\n\n        CASE\n            WHEN wps_state = 1 THEN 'Activado'\n            ELSE 'Desactivado'\n        END AS wps_state,\n\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type\n\n    FROM wardriving.wifi_network\n    WHERE lat IS NOT NULL\n      AND lon IS NOT NULL\n      AND lat <> 0\n      AND lon <> 0\n) t\nWHERE\n    (\n        '${WPS:raw}' = 'All'\n        OR wps_state IN (${WPS:sqlstring})\n    )\nAND (\n        '${Fabricante:raw}' = 'All'\n        OR manufacturer IN (${Fabricante:sqlstring})\n    )\nAND (\n        '${Cifrado:raw}' = 'All'\n        OR encryption_type IN (${Cifrado:sqlstring})\n    );",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        },
+                        "table": "wardriving.wifi_network"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "geomap",
+            "version": "13.0.1+security-01",
+            "spec": {
+              "options": {
+                "basemap": {
+                  "config": {
+                    "showLabels": true,
+                    "theme": "dark"
+                  },
+                  "layer-tooltip": false,
+                  "name": "Layer 0",
+                  "noRepeat": false,
+                  "opacity": 0.3,
+                  "type": "osm-standard"
+                },
+                "controls": {
+                  "mouseWheelZoom": true,
+                  "showAttribution": true,
+                  "showDebug": false,
+                  "showMeasure": false,
+                  "showScale": false,
+                  "showZoom": true
+                },
+                "layers": [
+                  {
+                    "config": {
+                      "showLegend": true,
+                      "style": {
+                        "color": {
+                          "field": "wps_state",
+                          "fixed": "green"
+                        },
+                        "opacity": 1,
+                        "rotation": {
+                          "fixed": 0,
+                          "max": 360,
+                          "min": -360,
+                          "mode": "mod"
+                        },
+                        "size": {
+                          "fixed": 9,
+                          "max": 15,
+                          "min": 2
+                        },
+                        "symbol": {
+                          "fixed": "img/icons/marker/x-mark.svg",
+                          "mode": "fixed"
+                        },
+                        "symbolAlign": {
+                          "horizontal": "center",
+                          "vertical": "center"
+                        },
+                        "text": {
+                          "field": "latitude",
+                          "fixed": "",
+                          "mode": "fixed"
+                        },
+                        "textConfig": {
+                          "fontSize": 12,
+                          "offsetX": 0,
+                          "offsetY": 0,
+                          "textAlign": "center",
+                          "textBaseline": "middle"
+                        }
+                      }
+                    },
+                    "name": "Estado_WPS",
+                    "tooltip": true,
+                    "type": "markers"
+                  }
+                ],
+                "tooltip": {
+                  "mode": "details"
+                },
+                "view": {
+                  "allLayers": true,
+                  "dashboardVariable": false,
+                  "id": "coords",
+                  "lat": 14.523458,
+                  "lon": -90.764876,
+                  "noRepeat": false,
+                  "shared": true,
+                  "zoom": 17.61
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "Activado": {
+                          "color": "green",
+                          "index": 0
+                        },
+                        "Desactivado": {
+                          "color": "semi-dark-red",
+                          "index": 1
+                        }
+                      }
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  },
+                  "fieldMinMax": false
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "Distribución geográfica según tipo de cifrado",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${postgres_wardriving}"
+                      },
+                      "spec": {
+                        "dataset": "wardriving",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n    latitude,\n    longitude,\n    bssid,\n    manufacturer,\n    signal_dbm,\n    wps_state,\n    encryption_type\nFROM (\n    SELECT\n        lat AS latitude,\n        lon AS longitude,\n        bssid,\n\n        CASE\n            WHEN manufacturer IS NULL THEN 'Desconocido'\n            WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n            WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n            ELSE TRIM(manufacturer)\n        END AS manufacturer,\n\n        signal_dbm,\n\n        CASE\n            WHEN wps_state = 1 THEN 'Activado'\n            ELSE 'Desactivado'\n        END AS wps_state,\n\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type\n\n    FROM wardriving.wifi_network\n    WHERE lat IS NOT NULL\n      AND lon IS NOT NULL\n      AND lat <> 0\n      AND lon <> 0\n) t\nWHERE\n    (\n        '${WPS:raw}' = 'All'\n        OR wps_state IN (${WPS:sqlstring})\n    )\nAND (\n        '${Fabricante:raw}' = 'All'\n        OR manufacturer IN (${Fabricante:sqlstring})\n    )\nAND (\n        '${Cifrado:raw}' = 'All'\n        OR encryption_type IN (${Cifrado:sqlstring})\n    );",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "geomap",
+            "version": "13.0.1+security-01",
+            "spec": {
+              "options": {
+                "basemap": {
+                  "config": {},
+                  "name": "Layer 0",
+                  "noRepeat": false,
+                  "opacity": 0.3,
+                  "type": "osm-standard"
+                },
+                "controls": {
+                  "mouseWheelZoom": true,
+                  "showAttribution": false,
+                  "showDebug": false,
+                  "showMeasure": false,
+                  "showScale": false,
+                  "showZoom": true
+                },
+                "layers": [
+                  {
+                    "config": {
+                      "showLegend": true,
+                      "style": {
+                        "color": {
+                          "field": "encryption_type",
+                          "fixed": "dark-green"
+                        },
+                        "opacity": 1,
+                        "rotation": {
+                          "fixed": 0,
+                          "max": 360,
+                          "min": -360,
+                          "mode": "mod"
+                        },
+                        "size": {
+                          "fixed": 9,
+                          "max": 15,
+                          "min": 2
+                        },
+                        "symbol": {
+                          "fixed": "img/icons/marker/x-mark.svg",
+                          "mode": "fixed"
+                        },
+                        "symbolAlign": {
+                          "horizontal": "center",
+                          "vertical": "center"
+                        },
+                        "textConfig": {
+                          "fontSize": 12,
+                          "offsetX": 0,
+                          "offsetY": 0,
+                          "textAlign": "center",
+                          "textBaseline": "middle"
+                        }
+                      }
+                    },
+                    "location": {
+                      "mode": "auto"
+                    },
+                    "name": "Encryptation",
+                    "tooltip": true,
+                    "type": "markers"
+                  }
+                ],
+                "tooltip": {
+                  "mode": "details"
+                },
+                "view": {
+                  "allLayers": true,
+                  "dashboardVariable": false,
+                  "dashboardVariableName": "",
+                  "id": "coords",
+                  "lat": 14.523416,
+                  "lon": -90.763927,
+                  "noRepeat": false,
+                  "shared": true,
+                  "zoom": 16.99
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "mappings": [
+                    {
+                      "type": "value",
+                      "options": {
+                        "Open": {
+                          "color": "orange",
+                          "index": 4
+                        },
+                        "Otro": {
+                          "color": "text",
+                          "index": 5
+                        },
+                        "WEP": {
+                          "color": "red",
+                          "index": 3
+                        },
+                        "WPA": {
+                          "color": "light-yellow",
+                          "index": 2
+                        },
+                        "WPA2": {
+                          "color": "blue",
+                          "index": 1
+                        },
+                        "WPA3": {
+                          "color": "green",
+                          "index": 0
+                        }
+                      }
+                    }
+                  ],
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "Proporción de redes según tipo de cifrado",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${postgres_wardriving}"
+                      },
+                      "spec": {
+                        "dataset": "wardriving",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n    encryption_type AS metric,\n    COUNT(*)::numeric AS value\nFROM (\n    SELECT\n        CASE\n            WHEN manufacturer IS NULL THEN 'Desconocido'\n            WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n            WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n            ELSE TRIM(manufacturer)\n        END AS manufacturer,\n\n        CASE\n            WHEN wps_state = 1 THEN 'Activado'\n            ELSE 'Desactivado'\n        END AS wps_type,\n\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type\n\n    FROM wardriving.wifi_network\n) t\nWHERE (\n    '${WPS:raw}' = 'All'\n    OR wps_type IN (${WPS:sqlstring})\n)\nAND (\n    '${Fabricante:raw}' = 'All'\n    OR manufacturer IN (${Fabricante:sqlstring})\n)\nAND (\n    '${Cifrado:raw}' = 'All'\n    OR encryption_type IN (${Cifrado:sqlstring})\n)\nGROUP BY encryption_type\nORDER BY value DESC;",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "piechart",
+            "version": "13.0.1+security-01",
+            "spec": {
+              "options": {
+                "displayLabels": [
+                  "name",
+                  "value"
+                ],
+                "legend": {
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true,
+                  "values": [
+                    "value",
+                    "percent"
+                  ]
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                  "calcs": [
+                    "sum"
+                  ],
+                  "fields": "",
+                  "values": true
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "asc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "WPA3"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "green",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "WPA2"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "blue",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Open"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "orange",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "WPA"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "light-yellow",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Proporción de redes según estado WPS",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${postgres_wardriving}"
+                      },
+                      "spec": {
+                        "dataset": "wardriving",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n    wps_type AS metric,\n    COUNT(*)::numeric AS value\nFROM (\n    SELECT\n        CASE\n            WHEN manufacturer IS NULL THEN 'Desconocido'\n            WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n            WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n            ELSE TRIM(manufacturer)\n        END AS manufacturer,\n\n        CASE\n            WHEN wps_state = 1 THEN 'Activado'\n            ELSE 'Desactivado'\n        END AS wps_type,\n\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type\n\n    FROM wardriving.wifi_network\n) t\nWHERE (\n    '${WPS:raw}' = 'All'\n    OR wps_type IN (${WPS:sqlstring})\n)\nAND (\n    '${Fabricante:raw}' = 'All'\n    OR manufacturer IN (${Fabricante:sqlstring})\n)\nAND (\n    '${Cifrado:raw}' = 'All'\n    OR encryption_type IN (${Cifrado:sqlstring})\n)\nGROUP BY wps_type\nORDER BY value DESC;",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "piechart",
+            "version": "13.0.1+security-01",
+            "spec": {
+              "options": {
+                "displayLabels": [
+                  "name",
+                  "value"
+                ],
+                "legend": {
+                  "displayMode": "table",
+                  "placement": "right",
+                  "showLegend": true,
+                  "values": [
+                    "value",
+                    "percent"
+                  ]
+                },
+                "pieType": "pie",
+                "reduceOptions": {
+                  "calcs": [
+                    "sum"
+                  ],
+                  "fields": "",
+                  "values": true
+                },
+                "sort": "desc",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "asc"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    }
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "scope": "series",
+                      "options": "metric"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "red",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "WPS Activo"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "green",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Desactivado"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "red",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "Activado"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "green",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Top 15 fabricantes detectados",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${postgres_wardriving}"
+                      },
+                      "spec": {
+                        "dataset": "wardriving",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n    manufacturer AS metric,\n    COUNT(*)::numeric AS value\nFROM (\n    SELECT\n        CASE\n            WHEN manufacturer IS NULL THEN 'Desconocido'\n            WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n            WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n            ELSE TRIM(manufacturer)\n        END AS manufacturer,\n\n        CASE\n            WHEN wps_state = 1 THEN 'Activado'\n            ELSE 'Desactivado'\n        END AS wps_state,\n\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type\n\n    FROM wardriving.wifi_network\n) t\nWHERE (\n    '${WPS:raw}' = 'All'\n    OR wps_state IN (${WPS:sqlstring})\n)\nAND (\n    '${Fabricante:raw}' = 'All'\n    OR manufacturer IN (${Fabricante:sqlstring})\n)\nAND (\n    '${Cifrado:raw}' = 'All'\n    OR encryption_type IN (${Cifrado:sqlstring})\n)\nGROUP BY manufacturer\nORDER BY value DESC\nLIMIT 15;",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "barchart",
+            "version": "13.0.1+security-01",
+            "spec": {
+              "options": {
+                "barRadius": 0,
+                "barWidth": 0.85,
+                "fullHighlight": false,
+                "groupWidth": 0.7,
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "orientation": "horizontal",
+                "showValue": "always",
+                "stacking": "none",
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "single",
+                  "sort": "none"
+                },
+                "xField": "manufacturer",
+                "xTickLabelRotation": 0,
+                "xTickLabelSpacing": 0
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "purple"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "fillOpacity": 80,
+                    "gradientMode": "none",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "lineWidth": 1,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "value"
+                    },
+                    "properties": [
+                      {
+                        "id": "color",
+                        "value": {
+                          "fixedColor": "purple",
+                          "mode": "fixed"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-7": {
+        "kind": "Panel",
+        "spec": {
+          "id": 7,
+          "title": "Total de redes detectadas",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${postgres_wardriving}"
+                      },
+                      "spec": {
+                        "dataset": "wardriving",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT COUNT(*) AS total\nFROM wardriving.wifi_network;",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "bargauge",
+            "version": "13.0.1+security-01",
+            "spec": {
+              "options": {
+                "displayMode": "lcd",
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": false
+                },
+                "maxVizHeight": 300,
+                "minVizHeight": 16,
+                "minVizWidth": 8,
+                "namePlacement": "auto",
+                "orientation": "horizontal",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showUnfilled": true,
+                "sizing": "auto",
+                "valueMode": "color"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "#ccccdc"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      },
+      "panel-8": {
+        "kind": "Panel",
+        "spec": {
+          "id": 8,
+          "title": "Fabricantes identificados",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "grafana-postgresql-datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "${postgres_wardriving}"
+                      },
+                      "spec": {
+                        "dataset": "wardriving",
+                        "editorMode": "code",
+                        "format": "table",
+                        "rawQuery": true,
+                        "rawSql": "SELECT\n    COUNT(DISTINCT\n        CASE\n            WHEN manufacturer IS NULL THEN 'Desconocido'\n            WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n            WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n            ELSE TRIM(manufacturer)\n        END\n    ) AS total\nFROM wardriving.wifi_network;",
+                        "sql": {
+                          "columns": [
+                            {
+                              "parameters": [],
+                              "type": "function"
+                            }
+                          ],
+                          "groupBy": [
+                            {
+                              "property": {
+                                "type": "string"
+                              },
+                              "type": "groupBy"
+                            }
+                          ],
+                          "limit": 50
+                        }
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "gauge",
+            "version": "13.0.1+security-01",
+            "spec": {
+              "options": {
+                "barShape": "flat",
+                "barWidthFactor": 0.5,
+                "effects": {
+                  "barGlow": false,
+                  "centerGlow": false,
+                  "gradient": true
+                },
+                "endpointMarker": "point",
+                "minVizHeight": 75,
+                "minVizWidth": 75,
+                "orientation": "auto",
+                "reduceOptions": {
+                  "calcs": [
+                    "lastNotNull"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "segmentCount": 1,
+                "segmentSpacing": 0.3,
+                "shape": "gauge",
+                "showThresholdLabels": false,
+                "showThresholdMarkers": false,
+                "sizing": "auto",
+                "sparkline": false,
+                "textMode": "auto"
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "purple"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": []
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": [
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 0,
+              "width": 24,
+              "height": 3,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-7"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 3,
+              "width": 19,
+              "height": 11,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 19,
+              "y": 3,
+              "width": 5,
+              "height": 11,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-8"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 14,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 12,
+              "y": 14,
+              "width": 12,
+              "height": 8,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-3"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 22,
+              "width": 12,
+              "height": 14,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-1"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 12,
+              "y": 22,
+              "width": 12,
+              "height": 14,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [],
+    "liveNow": false,
+    "preload": false,
+    "tags": [],
+    "timeSettings": {
+      "timezone": "browser",
+      "from": "now-6h",
+      "to": "now",
+      "autoRefresh": "",
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "Metricas",
+    "variables": [
+      {
+        "kind": "CustomVariable",
+        "spec": {
+          "name": "WPS",
+          "query": "All,Activado,Desactivado",
+          "current": {
+            "text": "All",
+            "value": "All"
+          },
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "hide": "dontHide",
+          "skipUrlSync": false,
+          "allowCustomValue": true,
+          "valuesFormat": "csv"
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "Fabricante",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "hide": "dontHide",
+          "refresh": "onDashboardLoad",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "grafana-postgresql-datasource",
+            "version": "v0",
+            "datasource": {
+              "name": "${postgres_wardriving}"
+            },
+            "spec": {
+              "dataset": "wardriving",
+              "editorMode": "code",
+              "format": "table",
+              "query": "SELECT\n    CASE\n        WHEN manufacturer IS NULL THEN 'Desconocido'\n        WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n        WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n        ELSE TRIM(manufacturer)\n    END AS manufacturer\nFROM wardriving.wifi_network\nGROUP BY manufacturer\nORDER BY COUNT(*) DESC;",
+              "rawQuery": true,
+              "rawSql": "SELECT\n    CASE\n        WHEN manufacturer IS NULL THEN 'Desconocido'\n        WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n        WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n        ELSE TRIM(manufacturer)\n    END AS manufacturer\nFROM wardriving.wifi_network\nGROUP BY manufacturer\nORDER BY COUNT(*) DESC;",
+              "refId": "SQLVariableQueryEditor-VariableQuery",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "disabled",
+          "definition": "SELECT\n    CASE\n        WHEN manufacturer IS NULL THEN 'Desconocido'\n        WHEN TRIM(manufacturer) = '' THEN 'Desconocido'\n        WHEN LOWER(TRIM(manufacturer)) = 'unknown' THEN 'Desconocido'\n        ELSE TRIM(manufacturer)\n    END AS manufacturer\nFROM wardriving.wifi_network\nGROUP BY manufacturer\nORDER BY COUNT(*) DESC;",
+          "options": [],
+          "multi": false,
+          "includeAll": true,
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "QueryVariable",
+        "spec": {
+          "name": "Cifrado",
+          "current": {
+            "text": "All",
+            "value": "$__all"
+          },
+          "hide": "dontHide",
+          "refresh": "onDashboardLoad",
+          "skipUrlSync": false,
+          "query": {
+            "kind": "DataQuery",
+            "group": "grafana-postgresql-datasource",
+            "version": "v0",
+            "datasource": {
+              "name": "${postgres_wardriving}"
+            },
+            "spec": {
+              "dataset": "wardriving",
+              "editorMode": "code",
+              "format": "table",
+              "query": "SELECT\n    encryption_type\nFROM (\n    SELECT\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type,\n        COUNT(*) AS total\n    FROM wardriving.wifi_network\n    GROUP BY\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END\n) t\nORDER BY total DESC;",
+              "rawQuery": true,
+              "rawSql": "SELECT\n    encryption_type\nFROM (\n    SELECT\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type,\n        COUNT(*) AS total\n    FROM wardriving.wifi_network\n    GROUP BY\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END\n) t\nORDER BY total DESC;",
+              "refId": "SQLVariableQueryEditor-VariableQuery",
+              "sql": {
+                "columns": [
+                  {
+                    "parameters": [],
+                    "type": "function"
+                  }
+                ],
+                "groupBy": [
+                  {
+                    "property": {
+                      "type": "string"
+                    },
+                    "type": "groupBy"
+                  }
+                ],
+                "limit": 50
+              }
+            }
+          },
+          "regex": "",
+          "regexApplyTo": "value",
+          "sort": "disabled",
+          "definition": "SELECT\n    encryption_type\nFROM (\n    SELECT\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END AS encryption_type,\n        COUNT(*) AS total\n    FROM wardriving.wifi_network\n    GROUP BY\n        CASE\n            WHEN encryption ILIKE '%WPA3%' THEN 'WPA3'\n            WHEN encryption ILIKE '%WPA2%' THEN 'WPA2'\n            WHEN encryption ILIKE '%WPA%'  THEN 'WPA'\n            WHEN encryption ILIKE '%WEP%'  THEN 'WEP'\n            WHEN encryption IS NULL OR TRIM(encryption) = '' THEN 'Open'\n            WHEN encryption ILIKE '%OPEN%' THEN 'Open'\n            WHEN encryption ILIKE '%NONE%' THEN 'Open'\n            ELSE 'Otro'\n        END\n) t\nORDER BY total DESC;",
+          "options": [],
+          "multi": false,
+          "includeAll": true,
+          "allowCustomValue": true
+        }
+      },
+      {
+        "kind": "DatasourceVariable",
+        "spec": {
+          "name": "postgres_wardriving",
+          "pluginId": "grafana-postgresql-datasource",
+          "refresh": "onDashboardLoad",
+          "regex": "",
+          "current": {
+            "text": "grafana-postgresql-datasource",
+            "value": "cfqxag0oaik1sa"
+          },
+          "options": [],
+          "multi": false,
+          "includeAll": false,
+          "label": "",
+          "hide": "hideVariable",
+          "skipUrlSync": false,
+          "description": "Variable para el data sources",
+          "allowCustomValue": false
+        }
+      }
+    ],
+    "preferences": {
+      "layout": {
+        "kind": "GridLayout",
+        "spec": {
+          "items": []
+        }
+      }
+    }
+  }
+}
