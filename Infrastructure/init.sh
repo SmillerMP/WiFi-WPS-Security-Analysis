@@ -1,7 +1,6 @@
+#!/usr/bin/env bash
 # Este script esta pensado para las personas que quieran simplemente correr la infraestructura de Wardriving sin tener que preocuparse por la configuración de PostgreSQL y Grafana, carga directamente un dump existente y levanta todo lo necesario.
 
-
-#!/usr/bin/env bash
 set -Eeuo pipefail
 
 # Rutas del proyecto
@@ -81,3 +80,22 @@ docker compose -f "$COMPOSE_FILE" up -d
 echo ""
 echo "=== Infraestructura inicializada ==="
 docker compose -f "$COMPOSE_FILE" ps
+
+# 6. Enlace directo a Grafana
+GRAFANA_URL="http://localhost:3000"
+
+ESC=$'\033'
+RESET="${ESC}[0m"
+BOLD="${ESC}[1m"
+NARANJA="${ESC}[38;5;208m"
+GRIS="${ESC}[38;5;245m"
+
+# Hipervínculo OSC 8: hace el texto clickeable en terminales compatibles
+LINK_OPEN="${ESC}]8;;${GRAFANA_URL}${ESC}\\"
+LINK_CLOSE="${ESC}]8;;${ESC}\\"
+
+echo ""
+echo "${BOLD}${NARANJA}>> Abre Grafana aquí:${RESET} ${NARANJA}${LINK_OPEN}${BOLD}${GRAFANA_URL}${RESET}${NARANJA}${LINK_CLOSE}${RESET}"
+echo "${GRIS}   Si aún no carga, dale unos segundos para que Grafana termine de levantarse.${RESET}"
+echo "${GRIS}   Si tu terminal no lo abre con un clic, usa Ctrl + clic (o copia el enlace).${RESET}"
+echo ""
