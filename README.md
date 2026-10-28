@@ -1,4 +1,4 @@
-# WiFI-Vulnerabilitys — Wardriving y análisis de redes WiFi
+# WiFi-WPS-Security-Analysis — Wardriving y análisis de redes WiFi
 
 Repositorio del proyecto de tesis para **capturar, procesar, almacenar y visualizar** información de redes WiFi
 obtenida mediante *wardriving* sobre una Raspberry Pi con GPS y pantalla táctil.
@@ -1208,4 +1208,4 @@ responsabilidad de quien lo realice.
 
 Proyecto de tesis — análisis de vulnerabilidades en redes WiFi mediante wardriving.
 
-Repositorio: [`SmillerMP/WiFI-Vulnerabilitys`](https://github.com/SmillerMP/WiFI-Vulnerabilitys)
+Repositorio: [`SmillerMP/WiFi-WPS-Security-Analysis`](https://github.com/SmillerMP/WiFi-WPS-Security-Analysis)
